@@ -1,0 +1,25 @@
+# Core ML (CPU version)
+torch==2.1.2  # Без +cpu для стандартной установки
+transformers==4.40.0
+sentence-transformers==2.6.1
+
+# LangChain
+langchain>=0.3,<0.4
+langchain-core>=0.3,<0.4
+langchain-community>=0.3,<0.4
+langchain-text-splitters>=0.3,<0.4
+langchain-experimental>=0.3,<0.4
+langchain-chroma>=0.1.4,<0.2
+langchain-huggingface>=0.1,<0.2
+langchain-ollama>=0.2,<0.3
+
+# Utilities
+pypdf==5.4.0
+beautifulsoup4==4.12.3
+tqdm==4.66.2
+requests==2.31.0
+numpy==1.26.0
+typing-extensions==4.9.0
+python-telegram-bot
+flask
+

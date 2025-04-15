@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: rag_parser
+    volumes:
+      - ./data:/app/data
+      - ./:/app/scripts   # Скрипты загружаются из локальной папки scripts
+      - ./models:/app/models
+    ports:
+      - "5001:5000"
+      - "4040:4040"
+    depends_on:
+      - chroma
+    environment:
+      - CHROMA_HOST=chroma
+      - CHROMA_PORT=8000
+
+  chroma:
+    image: ghcr.io/chroma-core/chroma:latest
+    container_name: chroma
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data/chroma:/data
+    environment:
+      - IS_PERSISTENT=TRUE
+      - PERSIST_DIRECTORY=/chroma/chroma
+
+volumes:
+  chroma-data:
+    driver: local
