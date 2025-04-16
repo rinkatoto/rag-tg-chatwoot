@@ -9,7 +9,7 @@ services:
       - ./:/app/scripts   # Скрипты загружаются из локальной папки scripts
       - ./models:/app/models
     ports:
-      - "5001:5000"
+      - "5011:5011"
       - "4040:4040"
     depends_on:
       - chroma

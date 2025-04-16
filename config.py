@@ -5,13 +5,13 @@ import logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
 
 # === Конфигурация ===
-CHROMA_HOST = '91.228.154.144'
-CHROMA_PORT = 8077
-COLLECTION_NAME = "yuzhane"
-EMBED_MODEL_PATH = "/app/models/sbert_cache/intfloat_multilingual-e5-base"
+CHROMA_HOST = os.getenv("CHROMA_HOST", '91.228.154.144')
+CHROMA_PORT = int(os.getenv("CHROMA_PORT", "8077"))
+COLLECTION_NAME = os.getenv("COLLECTION_NAME", "yuzhane")
+EMBED_MODEL_PATH = os.getenv("EMBED_MODEL_PATH", "/app/models/sbert_cache/intfloat_multilingual-e5-base")
 HF_API_KEY = os.getenv("HF_API_KEY")
 HF_ENDPOINT_URL = os.getenv("HF_ENDPOINT_URL")
-RERANKER_PATH = "/app/models/reranker_cache/cross-encoder_ms-marco-MiniLM-L-6-v2"
+RERANKER_PATH = os.getenv("RERANKER_PATH", "/app/models/reranker_cache/cross-encoder_ms-marco-MiniLM-L-6-v2")
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
 # Chatwoot Configuration
@@ -20,8 +20,8 @@ CHATWOOT_API_KEY = os.getenv("CHATWOOT_API_KEY")
 CHATWOOT_ACCOUNT_ID = os.getenv("CHATWOOT_ACCOUNT_ID")
 CHATWOOT_INBOX_ID = os.getenv("CHATWOOT_INBOX_ID")
 
-# Флаг для работы с Chatwoot
-CHATWOOT_ENABLED = True
+# Флаг для работы с Chatwoot - по умолчанию отключен, если не заданы все необходимые параметры
+CHATWOOT_ENABLED = bool(CHATWOOT_BASE_URL and CHATWOOT_API_KEY and CHATWOOT_ACCOUNT_ID and CHATWOOT_INBOX_ID)
 
 # Промпт для RAG
 RAG_PROMPT_TEMPLATE = """

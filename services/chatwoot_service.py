@@ -178,7 +178,7 @@ def get_or_create_chatwoot_conversation(contact_id):
         logging.error(f"Исключение при создании/получении разговора: {str(e)}", exc_info=True)
         return None
     
-def send_message_to_chatwoot(conversation_id, message, message_type="outgoing", sender="bot"):
+def send_message_to_chatwoot(conversation_id, message, message_type="outgoing", sender="bot", private=False):
     """Отправляет сообщение в Chatwoot"""
     if not CHATWOOT_ENABLED:
         return False
@@ -189,7 +189,7 @@ def send_message_to_chatwoot(conversation_id, message, message_type="outgoing", 
         data = {
             "content": message,
             "message_type": message_type,
-            "private": False,
+            "private": private,  # По умолчанию не приватное, теперь можно сделать приватным
             "sender_type": "agent" if sender == "bot" else "contact"
         }
         
@@ -271,29 +271,15 @@ def send_conversation_history_to_chatwoot(conversation_id, history_text):
         return False
     
     try:
-        url = f"{CHATWOOT_BASE_URL}/api/v1/accounts/{CHATWOOT_ACCOUNT_ID}/conversations/{conversation_id}/messages"
-        
-        data = {
-            "content": history_text,
-            "message_type": "outgoing",
-            "private": True,  # Приватное сообщение (видно только агентам)
-            "sender_type": "agent"
-        }
-        
-        headers = {
-            "api_access_token": CHATWOOT_API_KEY,
-            "Content-Type": "application/json"
-        }
-        
-        logging.info(f"Отправка истории переписки в Chatwoot: URL={url}")
-        response = requests.post(url, headers=headers, json=data)
-        
-        if response.status_code in [200, 201]:
-            logging.info(f"История переписки успешно отправлена в Chatwoot")
-            return True
-        else:
-            logging.error(f"Ошибка отправки истории в Chatwoot: {response.status_code} - {response.text}")
-            return False
+        # Используем обновленную функцию send_message_to_chatwoot с параметром private=True
+        logging.info(f"Отправка истории переписки в Chatwoot как приватное сообщение")
+        return send_message_to_chatwoot(
+            conversation_id,
+            history_text,
+            message_type="outgoing",
+            sender="bot",
+            private=True
+        )
     except Exception as e:
         logging.error(f"Исключение при отправке истории: {str(e)}", exc_info=True)
         return False

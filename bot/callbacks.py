@@ -84,36 +84,4 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 text="Произошла ошибка при попытке соединения с оператором. Пожалуйста, попробуйте позже."
             )
     
-    elif query.data == "back_to_bot":
-        try:
-            # Возвращаем пользователя к боту
-            if user_id in user_states:
-                user_states[user_id]["with_agent"] = False
-                if "conversation_id" in user_states[user_id]:
-                    conversation_id = user_states[user_id]["conversation_id"]
-                    
-                    # Отправляем уведомление в Chatwoot
-                    send_message_to_chatwoot(
-                        conversation_id, 
-                        "Пользователь вернулся к общению с ботом", 
-                        "outgoing", 
-                        "bot"
-                    )
-                    
-                    # Назначаем разговор назад на бота
-                    assign_agent_to_conversation(conversation_id)
-            
-            keyboard = [
-                [InlineKeyboardButton("Связаться с оператором", callback_data="connect_agent")]
-            ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
-            
-            await query.edit_message_text(
-                text="Вы вернулись к общению с ботом. Задайте свой вопрос.",
-                reply_markup=reply_markup
-            )
-        except Exception as e:
-            logging.error(f"Ошибка при возврате к боту: {e}")
-            await query.edit_message_text(
-                text="Произошла ошибка, но вы можете продолжить общение с ботом. Задайте свой вопрос."
-            )
+    # Удаляем обработку 'back_to_bot', оставляя только код для "connect_agent"

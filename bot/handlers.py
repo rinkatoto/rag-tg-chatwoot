@@ -5,8 +5,8 @@ from telegram.ext import ContextTypes
 
 from services.utils import (
     user_states, 
-    add_message_to_history,  # Добавьте этот импорт
-    get_formatted_history    # Также добавьте этот импорт, если используете
+    add_message_to_history,  
+    get_formatted_history    
 )
 from services.chatwoot_service import (
     create_or_get_chatwoot_contact, 
@@ -163,9 +163,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE, bas
     # Отправляем ответ пользователю (без кнопки)
     await update.message.reply_text(response_with_hint)
     
-    # Отправляем ответ бота в Chatwoot
+    # Отправляем ответ бота в Chatwoot, но с меткой [BOT_MESSAGE], чтобы избежать дублирования
     if CHATWOOT_ENABLED and user_id in user_states and "conversation_id" in user_states[user_id]:
-        send_message_to_chatwoot(user_states[user_id]["conversation_id"], response, "outgoing", "bot")
+        send_message_to_chatwoot(
+            user_states[user_id]["conversation_id"], 
+            f"[BOT_MESSAGE]{response}", 
+            "outgoing", 
+            "bot"
+        )
 
 async def connect_with_agent(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Функция для соединения пользователя с оператором"""
@@ -231,16 +236,24 @@ async def connect_with_agent(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 if not user_states[user_id].get("history_sent", False):
                     history_text = get_formatted_history(user_id)
                     logging.info(f"Отправка истории переписки в Chatwoot для разговора {conversation_id}")
-                    send_conversation_history_to_chatwoot(conversation_id, history_text)
+                    # Добавляем специальный префикс [INTERNAL_MESSAGE] к истории переписки
+                    send_message_to_chatwoot(
+                        conversation_id, 
+                        f"[INTERNAL_MESSAGE]История переписки: {history_text}", 
+                        "outgoing", 
+                        "bot",
+                        True  # также делаем приватным на всякий случай
+                    )
                     user_states[user_id]["history_sent"] = True
                 
-                # Отправляем уведомление в Chatwoot, что пользователь запросил оператора
+                # Отправляем уведомление в Chatwoot с префиксом [INTERNAL_MESSAGE]
                 logging.info(f"Отправка уведомления о запросе оператора в Chatwoot для разговора {conversation_id}")
                 send_message_to_chatwoot(
                     conversation_id, 
-                    "Пользователь запросил соединение с оператором", 
+                    f"[INTERNAL_MESSAGE]Пользователь запросил соединение с оператором", 
                     "outgoing", 
-                    "bot"
+                    "bot",
+                    True  # делаем сообщение приватным
                 )
                 
                 # Убираем назначение с бота, чтобы система могла назначить агента
@@ -249,8 +262,7 @@ async def connect_with_agent(update: Update, context: ContextTypes.DEFAULT_TYPE)
             
             await update.message.reply_text(
                 "Запрос на соединение с оператором отправлен. Пожалуйста, подождите, "
-                "скоро с вами свяжется наш специалист.\n\n"
-                "Чтобы вернуться к общению с ботом, напишите 'вернуться к боту'."
+                "скоро с вами свяжется наш специалист."
             )
         else:
             logging.error(f"Отсутствует conversation_id для пользователя {user_id}")

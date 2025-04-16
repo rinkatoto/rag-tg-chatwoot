@@ -1,5 +1,20 @@
+import os
 import threading
 import logging
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Загрузка переменных окружения из .env файла
+# Пробуем загрузить из текущей директории и из корня проекта
+env_paths = ['.env', '../.env', '/app/.env']
+for env_path in env_paths:
+    if Path(env_path).exists():
+        load_dotenv(env_path)
+        logging.info(f"Загружены переменные окружения из {env_path}")
+        break
+else:
+    logging.warning("Файл .env не найден. Используем переменные окружения из системы.")
+
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, CallbackQueryHandler
 import chromadb
 from langchain_chroma import Chroma
@@ -26,11 +41,23 @@ from webhook.app import run_webhook_server
 def main():
     global CHATWOOT_ENABLED
     
+    # Выводим информацию о загруженных переменных
+    logging.info(f"TELEGRAM_BOT_TOKEN: {'Установлен' if TELEGRAM_BOT_TOKEN else 'Отсутствует'}")
+    logging.info(f"CHROMA_HOST: {CHROMA_HOST}")
+    logging.info(f"CHROMA_PORT: {CHROMA_PORT}")
+    logging.info(f"HF_API_KEY: {'Установлен' if HF_API_KEY else 'Отсутствует'}")
+    logging.info(f"HF_ENDPOINT_URL: {'Установлен' if HF_ENDPOINT_URL else 'Отсутствует'}")
+    
     # Проверяем соединение с Chatwoot
     chatwoot_available = validate_chatwoot_config()
     if not chatwoot_available:
         logging.warning("⚠️ Интеграция с Chatwoot отключена из-за проблем с конфигурацией")
         CHATWOOT_ENABLED = False
+    
+    # Проверка наличия токена Telegram
+    if not TELEGRAM_BOT_TOKEN:
+        logging.error("❌ Токен Telegram бота не установлен. Установите переменную окружения TELEGRAM_BOT_TOKEN")
+        return
     
     # === Инициализация моделей ===
     logging.info("Инициализация моделей и подключения к базе данных...")
@@ -40,7 +67,10 @@ def main():
     base_retriever = vectorstore.as_retriever(search_kwargs={"k": 50})
     reranker = CrossEncoder(RERANKER_PATH)
     
-    hf_client = InferenceClient(model=HF_ENDPOINT_URL, token=HF_API_KEY)
+    if HF_API_KEY and HF_ENDPOINT_URL:
+        hf_client = InferenceClient(model=HF_ENDPOINT_URL, token=HF_API_KEY)
+    else:
+        logging.warning("⚠️ HF_API_KEY или HF_ENDPOINT_URL не установлены. Некоторые функции могут быть недоступны.")
     
     # Создание и запуск Telegram бота
     logging.info("Настройка Telegram бота...")
